@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ceres 13-Digit Allocation Viewer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -194,6 +197,7 @@
     <p>Supports .xlsx / .xls / .csv — auto-detects the correct sheet by its columns</p>
     <button class="upload-btn" onclick="document.getElementById('file-input').click()">Browse file</button>
     <input type="file" id="file-input" accept=".xlsx,.xls,.csv" />
+    <input type="file" id="file-input-b" accept=".xlsx,.xls,.csv" style="display:none" />
   </div>
 
   <div id="error-banner"></div>
@@ -201,6 +205,12 @@
 
   <div id="app">
     <button id="reupload-btn" onclick="resetApp()">↩ Upload a different file</button>
+    <button id="compare-btn" onclick="triggerCompareUpload()" style="display:none; margin-bottom:16px; padding:7px 16px; background:#f0f2f5; border:1.5px solid #c8d0e7; border-radius:8px; font-size:0.83rem; cursor:pointer; color:#333;">📊 Compare with another file</button>
+    <button id="clear-compare-btn" onclick="clearCompare()" style="display:none; margin-bottom:16px; padding:7px 16px; background:#fff0f0; border:1.5px solid #f5a0a0; border-radius:8px; font-size:0.83rem; cursor:pointer; color:#c0392b;">✕ Remove comparison</button>
+    <div id="file-labels" style="display:none; margin-bottom:12px; font-size:0.82rem; color:#555; gap:16px; flex-wrap:wrap;">
+      <span>📁 <strong>File A:</strong> <span id="label-a">—</span></span>
+      <span>📁 <strong>File B:</strong> <span id="label-b">—</span></span>
+    </div>
 
     <!-- Control Bar -->
     <div id="control-bar">
@@ -266,11 +276,20 @@ let allPeriods = [];         // sorted YYYYMM strings across all metric periods 
 let kCRD = null, kCDD = null;// single-value column keys (no period suffix)
 let mainChart  = null;
 
+let partsMapB   = new Map();  // File B
+let sortedKeysB = [];
+let allPeriodsB = [];
+let fileBName   = '';
+let fileAName   = '';
+let compareMode = false;
+let loadingSlot = 'A';        // which slot is currently being loaded
+
 // ─────────────────────────────────────────────────────────────────────────────
 // DOM refs
 // ─────────────────────────────────────────────────────────────────────────────
 const uploadSection = document.getElementById('upload-section');
 const fileInput     = document.getElementById('file-input');
+const fileInputB    = document.getElementById('file-input-b');
 const errorBanner   = document.getElementById('error-banner');
 const loader        = document.getElementById('loader');
 const app           = document.getElementById('app');
@@ -292,6 +311,7 @@ uploadSection.addEventListener('drop', e => {
   if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
 });
 fileInput.addEventListener('change', e => { if (e.target.files[0]) processFile(e.target.files[0]); });
+fileInputB.addEventListener('change', e => { if (e.target.files[0]) processFile(e.target.files[0], 'B'); });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Flexible column name helpers
@@ -330,10 +350,40 @@ function extractMetric(colName) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Process uploaded file (Excel or CSV)
 // ─────────────────────────────────────────────────────────────────────────────
-function processFile(file) {
+
+// Only check columns we actually need for the chart
+const REQUIRED_SIGS = [
+  ['13digit', '13'],       // 13_Digit column
+  ['ceresg', 'ceres'],     // CERES_G_202603
+  ['crd'],                 // CRD
+  ['cdd'],                 // CDD
+  ['bosch'],               // BOSCH_QTY_202603
+];
+
+function sheetHasRequiredCols(ws) {
+  // Strategy 1: default JSON parse (auto-detects header row)
+  try {
+    const peek = XLSX.utils.sheet_to_json(ws, { defval: null, raw: true });
+    if (peek.length > 0) {
+      const headers = Object.keys(peek[0]).map(h => norm(h));
+      if (REQUIRED_SIGS.every(sigs => headers.some(h => sigs.some(s => h.includes(s))))) return true;
+    }
+  } catch(e) {}
+  // Strategy 2: scan first 6 rows as raw arrays for a header row
+  try {
+    const rawRows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    for (let i = 0; i < Math.min(6, rawRows.length); i++) {
+      const headers = rawRows[i].map(h => norm(String(h)));
+      if (REQUIRED_SIGS.every(sigs => headers.some(h => sigs.some(s => h.includes(s))))) return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+function processFile(file, slot = 'A') {
   showError('');
   loader.style.display = 'block';
-  uploadSection.style.display = 'none';
+  if (slot === 'A') uploadSection.style.display = 'none';
 
   const isCsv = file.name.toLowerCase().endsWith('.csv');
   const reader = new FileReader();
@@ -342,36 +392,12 @@ function processFile(file) {
     try {
       let wb;
       if (isCsv) {
-        // Parse CSV as text; XLSX creates a single sheet named "Sheet1"
         wb = XLSX.read(e.target.result, { type: 'string' });
       } else {
         wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
       }
 
       // ── Find the sheet that contains all required columns ─────────────
-      // Required signatures (normalised): each entry must match at least one header
-      const REQUIRED_SIGS = [
-        ['productclass'],
-        ['plantkey'],
-        ['rbcustomeroemkey', 'rbcustomer'],
-        ['producthierarchykey'],
-        ['deliverycountry'],
-        ['deliveryregion'],
-        ['13digit'],
-        ['yyyymm'],
-        ['ceresg'],        // matches CERES_G_202603 etc.
-        ['crd'],
-        ['cdd'],
-        ['bosch'],         // matches BOSCH_QTY_202603 etc.
-      ];
-
-      function sheetHasRequiredCols(ws) {
-        // header:1 returns raw arrays; first element is the actual header row
-        const firstRow = (XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })[0] || []);
-        const headers = firstRow.map(h => norm(String(h)));
-        return REQUIRED_SIGS.every(sigs => headers.some(h => sigs.some(s => h.includes(s))));
-      }
-
       const sheetName = isCsv
         ? wb.SheetNames[0]
         : wb.SheetNames.find(n => sheetHasRequiredCols(wb.Sheets[n]));
@@ -379,8 +405,7 @@ function processFile(file) {
       if (!sheetName) {
         throw new Error(
           'Could not find a sheet containing all required columns ' +
-          '(Product_Class, PLANT_KEY, RB_Customer_OEM_Key, Product_Hierarchy_Key, ' +
-          'Delivery_Country, Delivery_Region, 13_Digit, YYYYMM, CERES_G, CRD, CDD, BOSCH_QTY).\n' +
+          '(13_Digit, CERES_G, CRD, CDD, BOSCH_QTY).\n' +
           'Sheets in this file: ' + wb.SheetNames.join(', ')
         );
       }
@@ -405,7 +430,6 @@ function processFile(file) {
       if (!k13) throw new Error('Cannot find the 13-digit column (expected in column G).\nHeaders: ' + allKeys.join(', '));
 
       // ── Categorise all columns by metric + period ──────────────────────
-      // periodColMap: { '202603': { ceresG: colKey, bosch: colKey, crd: colKey, cdd: colKey }, ... }
       const periodColMap = {};
       const noPeriodCols = { crd: null, cdd: null, ceresG: null, bosch: null };
 
@@ -416,38 +440,32 @@ function processFile(file) {
         const period = extractPeriod(key);
         if (period) {
           if (!periodColMap[period]) periodColMap[period] = {};
-          if (!periodColMap[period][metric]) periodColMap[period][metric] = key; // keep first match
+          if (!periodColMap[period][metric]) periodColMap[period][metric] = key;
         } else {
           if (!noPeriodCols[metric]) noPeriodCols[metric] = key;
         }
       }
 
-      allPeriods = Object.keys(periodColMap).sort();
+      let localPeriods = Object.keys(periodColMap).sort();
 
       // Fallback: if no period columns found at all, treat the 4 base cols as a single snapshot
-      if (allPeriods.length === 0) {
+      if (localPeriods.length === 0) {
         const kCeres = findKey(allKeys, 'ceres', 'g');
         const kBosch = findKey(allKeys, 'bosch');
         kCRD = findKey(allKeys, 'crd');
         kCDD = findKey(allKeys, 'cdd');
         if (!kCeres || !kBosch) throw new Error('Cannot identify required columns. Headers: ' + allKeys.join(', '));
-        // Treat as single period "snapshot"
         const fakePeriod = '202603';
         periodColMap[fakePeriod] = { ceresG: kCeres, bosch: kBosch };
         if (kCRD) periodColMap[fakePeriod].crd = kCRD;
         if (kCDD) periodColMap[fakePeriod].cdd = kCDD;
-        allPeriods = [fakePeriod];
+        localPeriods = [fakePeriod];
       } else {
-        // Keep single-value CRD/CDD for the summary card
         kCRD = noPeriodCols.crd;
         kCDD = noPeriodCols.cdd;
       }
 
       // ── Detect long vs wide format ─────────────────────────────────────
-      // Long format: multiple rows share the same 13-digit value + a period column
-      // Wide format: each row is a unique part, many period-named metric columns
-      //
-      // Heuristic: check if any column's VALUES look like YYYYMM
       let periodValueKey = null;
       for (const key of allKeys) {
         if (key === k13) continue;
@@ -458,18 +476,16 @@ function processFile(file) {
         }
       }
 
-      partsMap.clear();
+      const localMap = new Map();
 
-      if (periodValueKey && allPeriods.length <= 2) {
+      if (periodValueKey && localPeriods.length <= 2) {
         // ── LONG FORMAT ────────────────────────────────────────────────────
-        // Each row has: k13 (part), periodValueKey (YYYYMM), + metric value columns
-        // Find the metric value columns for long format
         const lkCeres = noPeriodCols.ceresG || findKey(allKeys, 'ceres');
         const lkBosch = noPeriodCols.bosch  || findKey(allKeys, 'bosch');
         const lkCrd   = noPeriodCols.crd    || findKey(allKeys, 'crd');
         const lkCdd   = noPeriodCols.cdd    || findKey(allKeys, 'cdd');
 
-        const tmpMap = new Map(); // digit13 → Map<period, {ceresG,bosch,crd,cdd}>
+        const tmpMap = new Map();
         for (const row of rows) {
           const d13    = row[k13] != null ? String(row[k13]).trim() : null;
           const period = row[periodValueKey] != null ? String(row[periodValueKey]).trim() : null;
@@ -483,15 +499,14 @@ function processFile(file) {
           });
         }
 
-        // Collect all periods seen
         const periodSet = new Set();
         for (const [, pMap] of tmpMap) for (const p of pMap.keys()) periodSet.add(p);
-        allPeriods = [...periodSet].sort();
+        localPeriods = [...periodSet].sort();
 
         for (const [d13, pMap] of tmpMap) {
-          const ts = allPeriods.map(p => ({ period: p, ...(pMap.get(p) || { ceresG:0, bosch:0, crd:0, cdd:0 }) }));
-          const firstPeriod = pMap.get(allPeriods[0]) || {};
-          partsMap.set(d13, {
+          const ts = localPeriods.map(p => ({ period: p, ...(pMap.get(p) || { ceresG:0, bosch:0, crd:0, cdd:0 }) }));
+          const firstPeriod = pMap.get(localPeriods[0]) || {};
+          localMap.set(d13, {
             baseBosch : firstPeriod.bosch  || 0,
             baseCeres : firstPeriod.ceresG || 0,
             baseCrd   : firstPeriod.crd    || 0,
@@ -502,15 +517,14 @@ function processFile(file) {
 
       } else {
         // ── WIDE FORMAT ────────────────────────────────────────────────────
-        // Each row = one unique part. Period data comes from period-named columns.
         const seenParts = new Set();
         for (const row of rows) {
           const d13 = row[k13] != null ? String(row[k13]).trim() : null;
           if (!d13) continue;
-          if (seenParts.has(d13)) continue; // deduplicate
+          if (seenParts.has(d13)) continue;
           seenParts.add(d13);
 
-          const ts = allPeriods.map(p => {
+          const ts = localPeriods.map(p => {
             const pcols = periodColMap[p] || {};
             return {
               period : p,
@@ -521,11 +535,10 @@ function processFile(file) {
             };
           });
 
-          // Base values = first available period (for sorting + summary card)
           const firstTs = ts[0] || {};
-          const baseBosch = Math.max(...ts.map(t => t.bosch));  // use max for sorting
+          const baseBosch = Math.max(...ts.map(t => t.bosch));
 
-          partsMap.set(d13, {
+          localMap.set(d13, {
             baseBosch : baseBosch,
             baseCeres : firstTs.ceresG || 0,
             baseCrd   : kCRD ? toNum(row[kCRD]) : (firstTs.crd || 0),
@@ -535,16 +548,30 @@ function processFile(file) {
         }
       }
 
-      if (partsMap.size === 0) throw new Error('No valid rows found in the sheet.');
+      if (localMap.size === 0) throw new Error('No valid rows found in the sheet.');
 
-      // Sort parts by baseBosch descending
-      sortedKeys = [...partsMap.keys()].sort((a, b) => partsMap.get(b).baseBosch - partsMap.get(a).baseBosch);
+      const localSortedKeys = [...localMap.keys()].sort((a, b) => localMap.get(b).baseBosch - localMap.get(a).baseBosch);
 
       loader.style.display = 'none';
-      buildUI();
+
+      if (slot === 'A') {
+        partsMap.clear();
+        localMap.forEach((v, k) => partsMap.set(k, v));
+        sortedKeys = localSortedKeys;
+        allPeriods = localPeriods;
+        fileAName = file.name;
+        buildUI();
+      } else {
+        partsMapB.clear();
+        localMap.forEach((v, k) => partsMapB.set(k, v));
+        sortedKeysB = localSortedKeys;
+        allPeriodsB = localPeriods;
+        fileBName = file.name;
+        activateCompareMode();
+      }
     } catch (err) {
       loader.style.display = 'none';
-      uploadSection.style.display = 'block';
+      if (slot === 'A') uploadSection.style.display = 'block';
       showError('⚠ ' + err.message);
       console.error(err);
     }
@@ -573,8 +600,42 @@ function buildUI() {
   app.style.display         = 'block';
   reuploadBtn.style.display = 'block';
   emptyState.style.display  = 'block';
+  document.getElementById('compare-btn').style.display = 'inline-block';
+  document.getElementById('label-a').textContent = fileAName;
 
   setupSearchableDropdown();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Compare mode helpers
+// ─────────────────────────────────────────────────────────────────────────────
+function triggerCompareUpload() {
+  loadingSlot = 'B';
+  fileInputB.click();
+}
+
+function activateCompareMode() {
+  compareMode = true;
+  document.getElementById('compare-btn').style.display = 'none';
+  document.getElementById('clear-compare-btn').style.display = 'inline-block';
+  document.getElementById('file-labels').style.display = 'flex';
+  document.getElementById('label-a').textContent = fileAName;
+  document.getElementById('label-b').textContent = fileBName;
+  const currentKey = document.getElementById('part-search').value.trim();
+  if (currentKey && partsMap.has(currentKey)) selectPart(currentKey);
+}
+
+function clearCompare() {
+  partsMapB.clear();
+  sortedKeysB = [];
+  allPeriodsB = [];
+  fileBName = '';
+  compareMode = false;
+  document.getElementById('compare-btn').style.display = 'inline-block';
+  document.getElementById('clear-compare-btn').style.display = 'none';
+  document.getElementById('file-labels').style.display = 'none';
+  const currentKey = document.getElementById('part-search').value.trim();
+  if (currentKey && partsMap.has(currentKey)) selectPart(currentKey);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -660,129 +721,115 @@ function selectPart(key) {
   document.getElementById('d-cdd').textContent   = fmt(part.baseCdd);
   detailCard.style.display = 'block';
 
+  const tsA = part.timeSeries;
+  const tsB = (compareMode && partsMapB.has(key)) ? partsMapB.get(key).timeSeries : null;
+
   // Chart
   document.getElementById('chart-title').textContent = key;
-  renderLineChart(part.timeSeries);
+  renderMixedChart(tsA, tsB);
   chartCard.style.display = 'block';
 
   // Table
-  renderTable(part.timeSeries);
+  renderTable(tsA, tsB);
   tableCard.style.display = 'block';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Mixed chart: CRD + CDD as bars, Ceres G + Bosch Qty as lines
 // ─────────────────────────────────────────────────────────────────────────────
-function renderLineChart(ts) {
+function renderMixedChart(tsA, tsB = null) {
   if (mainChart) { mainChart.destroy(); mainChart = null; }
 
-  const labels  = ts.map(t => t.period);
-  const ceresG  = ts.map(t => t.ceresG  || null);
-  const bosch   = ts.map(t => t.bosch   || null);
-  const crd     = ts.map(t => t.crd     || null);
-  const cdd     = ts.map(t => t.cdd     || null);
-
   const ctx = document.getElementById('main-chart').getContext('2d');
-  mainChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        {
-          type           : 'bar',
-          label          : 'CRD',
-          data           : crd,
-          backgroundColor: 'rgba(45,198,83,0.6)',
-          borderColor    : '#2dc653',
-          borderWidth    : 1,
-          borderRadius   : 3,
-          order          : 2,
-        },
-        {
-          type           : 'bar',
-          label          : 'CDD',
-          data           : cdd,
-          backgroundColor: 'rgba(155,93,229,0.6)',
-          borderColor    : '#9b5de5',
-          borderWidth    : 1,
-          borderRadius   : 3,
-          order          : 2,
-        },
-        {
-          type           : 'line',
-          label          : 'CERES_G',
-          data           : ceresG,
-          borderColor    : '#e85d04',
-          backgroundColor: 'rgba(232,93,4,0.08)',
-          borderWidth    : 2.5,
-          pointRadius    : 3,
-          tension        : 0.3,
-          fill           : false,
-          spanGaps       : true,
-          order          : 1,
-        },
-        {
-          type           : 'line',
-          label          : 'BOSCH_QTY',
-          data           : bosch,
-          borderColor    : '#0096c7',
-          backgroundColor: 'rgba(0,150,199,0.08)',
-          borderWidth    : 2.5,
-          pointRadius    : 3,
-          tension        : 0.3,
-          fill           : false,
-          spanGaps       : true,
-          order          : 1,
-        },
-      ]
-    },
-    options: {
-      responsive : true,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels  : { boxWidth: 14, font: { size: 12 } }
-        },
-        tooltip: {
-          callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? fmt(ctx.parsed.y) : '—'}`
-          }
-        }
+
+  const sharedOptions = {
+    responsive : true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels  : { boxWidth: 14, font: { size: 12 } }
       },
-      scales: {
-        x: {
-          grid : { color: '#f0f2f5' },
-          ticks: { font: { size: 11 }, maxRotation: 45 },
-          title: { display: true, text: 'YYYYMM', font: { size: 11 } }
-        },
-        y: {
-          beginAtZero: true,
-          grid : { color: '#f0f2f5' },
-          ticks: {
-            font    : { size: 11 },
-            callback: v => fmtShort(v),
-          }
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? fmt(ctx.parsed.y) : '—'}`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid : { color: '#f0f2f5' },
+        ticks: { font: { size: 11 }, maxRotation: 45 },
+        title: { display: true, text: 'YYYYMM', font: { size: 11 } }
+      },
+      y: {
+        beginAtZero: true,
+        grid : { color: '#f0f2f5' },
+        ticks: {
+          font    : { size: 11 },
+          callback: v => fmtShort(v),
         }
       }
     }
-  });
+  };
+
+  if (!tsB) {
+    // Single file mode
+    const labels = tsA.map(t => t.period);
+    const ceresG = tsA.map(t => t.ceresG || null);
+    const bosch  = tsA.map(t => t.bosch  || null);
+    const crd    = tsA.map(t => t.crd    || null);
+    const cdd    = tsA.map(t => t.cdd    || null);
+
+    mainChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { type:'bar',  label:'CRD',      data:crd,    backgroundColor:'rgba(45,198,83,0.6)',   borderColor:'#2dc653', borderWidth:1, borderRadius:3, order:2 },
+          { type:'bar',  label:'CDD',      data:cdd,    backgroundColor:'rgba(155,93,229,0.6)',  borderColor:'#9b5de5', borderWidth:1, borderRadius:3, order:2 },
+          { type:'line', label:'CERES_G',  data:ceresG, borderColor:'#e85d04', backgroundColor:'rgba(232,93,4,0.08)',  borderWidth:2.5, pointRadius:3, tension:0.3, fill:false, spanGaps:true, order:1 },
+          { type:'line', label:'BOSCH_QTY',data:bosch,  borderColor:'#0096c7', backgroundColor:'rgba(0,150,199,0.08)', borderWidth:2.5, pointRadius:3, tension:0.3, fill:false, spanGaps:true, order:1 },
+        ]
+      },
+      options: sharedOptions
+    });
+
+  } else {
+    // Compare mode — union of both period sets
+    const periodLabels = [...new Set([...tsA.map(t => t.period), ...tsB.map(t => t.period)])].sort();
+    const mapA = new Map(tsA.map(t => [t.period, t]));
+    const mapB = new Map(tsB.map(t => [t.period, t]));
+    const getA = (p, k) => { const t = mapA.get(p); return t ? (t[k] || null) : null; };
+    const getB = (p, k) => { const t = mapB.get(p); return t ? (t[k] || null) : null; };
+
+    mainChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: periodLabels,
+        datasets: [
+          { type:'bar',  label:'CRD (A)',       data:periodLabels.map(p=>getA(p,'crd')),    backgroundColor:'rgba(45,198,83,0.6)',   borderColor:'#2dc653', borderWidth:1, borderRadius:3, order:3, barPercentage:0.8, categoryPercentage:0.9 },
+          { type:'bar',  label:'CRD (B)',       data:periodLabels.map(p=>getB(p,'crd')),    backgroundColor:'rgba(45,198,83,0.35)',  borderColor:'#2dc653', borderWidth:1, borderRadius:3, order:3, barPercentage:0.8, categoryPercentage:0.9 },
+          { type:'bar',  label:'CDD (A)',       data:periodLabels.map(p=>getA(p,'cdd')),    backgroundColor:'rgba(155,93,229,0.6)',  borderColor:'#9b5de5', borderWidth:1, borderRadius:3, order:3, barPercentage:0.8, categoryPercentage:0.9 },
+          { type:'bar',  label:'CDD (B)',       data:periodLabels.map(p=>getB(p,'cdd')),    backgroundColor:'rgba(155,93,229,0.35)', borderColor:'#9b5de5', borderWidth:1, borderRadius:3, order:3, barPercentage:0.8, categoryPercentage:0.9 },
+          { type:'line', label:'CERES_G (A)',   data:periodLabels.map(p=>getA(p,'ceresG')), borderColor:'#e85d04', backgroundColor:'rgba(232,93,4,0.08)',  borderWidth:2.5, pointRadius:3, tension:0.3, fill:false, spanGaps:true, order:1 },
+          { type:'line', label:'CERES_G (B)',   data:periodLabels.map(p=>getB(p,'ceresG')), borderColor:'#e85d04', backgroundColor:'rgba(232,93,4,0.08)',  borderWidth:2.5, pointRadius:3, tension:0.3, fill:false, spanGaps:true, order:1, borderDash:[6,3] },
+          { type:'line', label:'BOSCH_QTY (A)', data:periodLabels.map(p=>getA(p,'bosch')),  borderColor:'#0096c7', backgroundColor:'rgba(0,150,199,0.08)', borderWidth:2.5, pointRadius:3, tension:0.3, fill:false, spanGaps:true, order:1 },
+          { type:'line', label:'BOSCH_QTY (B)', data:periodLabels.map(p=>getB(p,'bosch')),  borderColor:'#0096c7', backgroundColor:'rgba(0,150,199,0.08)', borderWidth:2.5, pointRadius:3, tension:0.3, fill:false, spanGaps:true, order:1, borderDash:[6,3] },
+        ]
+      },
+      options: sharedOptions
+    });
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data table — transposed: periods as columns, metrics as rows
 // ─────────────────────────────────────────────────────────────────────────────
-function renderTable(ts) {
+function renderTable(tsA, tsB = null) {
   const thead = document.getElementById('table-head');
   const tbody = document.getElementById('table-body');
 
-  // Header: blank label cell + one column per period
-  thead.innerHTML = '<tr>' +
-    '<th style="text-align:left">Metric</th>' +
-    ts.map(t => `<th>${t.period}</th>`).join('') +
-    '</tr>';
-
-  // One row per metric
   const metrics = [
     { label: 'Ceres G',   key: 'ceresG' },
     { label: 'CRD',       key: 'crd'    },
@@ -790,12 +837,62 @@ function renderTable(ts) {
     { label: 'Bosch Qty', key: 'bosch'  },
   ];
 
-  tbody.innerHTML = metrics.map(m =>
-    `<tr>
-      <td style="text-align:left;font-weight:600;white-space:nowrap">${m.label}</td>
-      ${ts.map(t => `<td>${fmt(t[m.key])}</td>`).join('')}
-    </tr>`
-  ).join('');
+  if (!tsB) {
+    // Single file mode — periods as columns, metrics as rows
+    thead.innerHTML = '<tr>' +
+      '<th style="text-align:left">Metric</th>' +
+      tsA.map(t => `<th>${t.period}</th>`).join('') +
+      '</tr>';
+
+    tbody.innerHTML = metrics.map(m =>
+      `<tr>
+        <td style="text-align:left;font-weight:600;white-space:nowrap">${m.label}</td>
+        ${tsA.map(t => `<td>${fmt(t[m.key])}</td>`).join('')}
+      </tr>`
+    ).join('');
+
+  } else {
+    // Compare mode — Metric | Source | period columns
+    const allPeriodsUnion = [...new Set([...tsA.map(t => t.period), ...tsB.map(t => t.period)])].sort();
+    const mapA = new Map(tsA.map(t => [t.period, t]));
+    const mapB = new Map(tsB.map(t => [t.period, t]));
+
+    thead.innerHTML = '<tr>' +
+      '<th style="text-align:left">Metric</th>' +
+      '<th style="text-align:left">Source</th>' +
+      allPeriodsUnion.map(p => `<th>${p}</th>`).join('') +
+      '</tr>';
+
+    tbody.innerHTML = metrics.map(m => {
+      const rowA = `<tr>
+        <td style="text-align:left;font-weight:600;white-space:nowrap">${m.label}</td>
+        <td style="text-align:left;color:#0f3460">File A</td>
+        ${allPeriodsUnion.map(p => { const t = mapA.get(p); return `<td>${t ? fmt(t[m.key]) : '—'}</td>`; }).join('')}
+      </tr>`;
+      const rowB = `<tr>
+        <td style="text-align:left"></td>
+        <td style="text-align:left;color:#e85d04">File B</td>
+        ${allPeriodsUnion.map(p => { const t = mapB.get(p); return `<td>${t ? fmt(t[m.key]) : '—'}</td>`; }).join('')}
+      </tr>`;
+      const rowDelta = `<tr style="background:#fffbea">
+        <td style="text-align:left"></td>
+        <td style="text-align:left;color:#888">Δ (B−A)</td>
+        ${allPeriodsUnion.map(p => {
+          const tA = mapA.get(p);
+          const tB = mapB.get(p);
+          if (!tA && !tB) return '<td>—</td>';
+          const a = tA ? (tA[m.key] || 0) : 0;
+          const b = tB ? (tB[m.key] || 0) : 0;
+          const delta = b - a;
+          if (delta === 0) return '<td>0</td>';
+          const color = delta > 0 ? '#27ae60' : '#e74c3c';
+          const prefix = delta > 0 ? '+' : '−';
+          return `<td style="color:${color}">${prefix}${fmt(Math.abs(delta))}</td>`;
+        }).join('')}
+      </tr>`;
+      return rowA + rowB + rowDelta;
+    }).join('');
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -829,6 +926,12 @@ function resetApp() {
   partsMap.clear();
   sortedKeys = [];
   allPeriods = [];
+  partsMapB.clear();
+  sortedKeysB = [];
+  allPeriodsB = [];
+  fileBName = '';
+  fileAName = '';
+  compareMode = false;
   if (mainChart) { mainChart.destroy(); mainChart = null; }
 
   app.style.display         = 'none';
@@ -837,8 +940,12 @@ function resetApp() {
   chartCard.style.display   = 'none';
   tableCard.style.display   = 'none';
   emptyState.style.display  = 'none';
+  document.getElementById('compare-btn').style.display      = 'none';
+  document.getElementById('clear-compare-btn').style.display = 'none';
+  document.getElementById('file-labels').style.display      = 'none';
   uploadSection.style.display = 'block';
-  fileInput.value = '';
+  fileInput.value  = '';
+  fileInputB.value = '';
   partSearch.value = '';
   showError('');
 }
