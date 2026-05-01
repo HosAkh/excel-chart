@@ -19,15 +19,15 @@
     header {
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
       color: #fff;
-      padding: 24px 32px;
+      padding: 22px 32px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.25);
     }
-    header h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
-    header p  { font-size: 0.85rem; opacity: 0.7; margin-top: 4px; }
+    header h1 { font-size: 1.5rem; font-weight: 700; }
+    header p  { font-size: 0.82rem; opacity: 0.65; margin-top: 4px; }
 
-    main { max-width: 1400px; margin: 0 auto; padding: 28px 24px; }
+    main { max-width: 1300px; margin: 0 auto; padding: 28px 20px; }
 
-    /* ── Upload Zone ─────────────────────────────────── */
+    /* ── Upload Zone ──────────────────────────── */
     #upload-section {
       background: #fff;
       border: 2px dashed #c8d0e7;
@@ -35,159 +35,144 @@
       padding: 56px 32px;
       text-align: center;
       cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
+      transition: border-color .2s, background .2s;
     }
-    #upload-section.drag-over {
-      border-color: #0f3460;
-      background: #f0f4ff;
+    #upload-section.drag-over { border-color: #0f3460; background: #f0f4ff; }
+    #upload-section svg { color: #0f3460; margin-bottom: 14px; }
+    #upload-section h2 { font-size: 1.15rem; color: #333; }
+    #upload-section p  { color: #777; font-size: 0.88rem; margin-top: 6px; }
+    .upload-btn {
+      display: inline-block; margin-top: 18px; padding: 10px 24px;
+      background: #0f3460; color: #fff; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none;
     }
-    #upload-section svg { color: #0f3460; margin-bottom: 16px; }
-    #upload-section h2 { font-size: 1.2rem; color: #333; }
-    #upload-section p  { color: #777; font-size: 0.9rem; margin-top: 6px; }
-    #upload-section .btn {
-      display: inline-block;
-      margin-top: 18px;
-      padding: 10px 24px;
-      background: #0f3460;
-      color: #fff;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-    }
-    #upload-section .btn:hover { background: #1a4a8a; }
+    .upload-btn:hover { background: #1a4a8a; }
     #file-input { display: none; }
 
-    /* ── Error Banner ────────────────────────────────── */
+    /* ── Error ──────────────────────────────── */
     #error-banner {
-      display: none;
-      background: #fff0f0;
-      border: 1px solid #f5a0a0;
-      border-radius: 10px;
-      padding: 14px 18px;
-      margin-top: 16px;
-      color: #c0392b;
-      font-size: 0.9rem;
+      display: none; background: #fff0f0; border: 1px solid #f5a0a0;
+      border-radius: 10px; padding: 14px 18px; margin-top: 16px;
+      color: #c0392b; font-size: 0.88rem; white-space: pre-wrap;
     }
 
-    /* ── App (hidden until file loaded) ─────────────── */
-    #app { display: none; }
-
-    /* ── Top Bar ─────────────────────────────────────── */
-    #top-bar {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      background: #fff;
-      border-radius: 12px;
-      padding: 18px 22px;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-    }
-    #top-bar label { font-weight: 600; font-size: 0.9rem; white-space: nowrap; }
-    #part-select {
-      flex: 1;
-      min-width: 240px;
-      padding: 10px 14px;
-      font-size: 0.9rem;
-      border: 1.5px solid #c8d0e7;
-      border-radius: 8px;
-      outline: none;
-      cursor: pointer;
-    }
-    #part-select:focus { border-color: #0f3460; }
-
-    .stat-pill {
-      background: #f0f4ff;
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 0.82rem;
-      color: #333;
-      white-space: nowrap;
-    }
-    .stat-pill strong { color: #0f3460; }
-
-    /* ── Detail Card ─────────────────────────────────── */
-    #detail-card {
-      display: none;
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px 24px;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-    }
-    #detail-card h3 { font-size: 1rem; font-weight: 700; color: #0f3460; margin-bottom: 14px; }
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 14px;
-    }
-    .metric-box {
-      background: #f8faff;
-      border: 1px solid #dde4f5;
-      border-radius: 10px;
-      padding: 14px 16px;
-    }
-    .metric-box .label { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
-    .metric-box .value { font-size: 1.5rem; font-weight: 700; color: #0f3460; margin-top: 4px; }
-
-    /* ── Charts Grid ─────────────────────────────────── */
-    #charts-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-    @media (max-width: 900px) { #charts-grid { grid-template-columns: 1fr; } }
-
-    .chart-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px 22px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-    }
-    .chart-card h3 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #333;
-      margin-bottom: 14px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #f0f2f5;
-    }
-    .chart-card canvas { max-height: 340px; }
-
-    /* ── Loader ──────────────────────────────────────── */
-    #loader {
-      display: none;
-      text-align: center;
-      padding: 40px;
-      color: #555;
-      font-size: 1rem;
-    }
+    /* ── Loader ──────────────────────────────── */
+    #loader { display: none; text-align: center; padding: 48px; color: #555; }
     .spinner {
-      width: 36px; height: 36px;
-      border: 4px solid #e0e0e0;
-      border-top-color: #0f3460;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 12px;
+      width: 36px; height: 36px; border: 4px solid #e0e0e0;
+      border-top-color: #0f3460; border-radius: 50%;
+      animation: spin .8s linear infinite; margin: 0 auto 14px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Re-upload button ────────────────────────────── */
+    /* ── App ─────────────────────────────────── */
+    #app { display: none; }
+
+    /* ── Control Bar ──────────────────────────── */
+    #control-bar {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .control-label {
+      font-weight: 600; font-size: 0.88rem; color: #444;
+      margin-bottom: 6px; display: block;
+    }
+
+    /* searchable dropdown */
+    .search-wrap { position: relative; flex: 1; min-width: 300px; }
+    #part-search {
+      width: 100%; padding: 10px 14px; font-size: 0.9rem;
+      border: 1.5px solid #c8d0e7; border-radius: 8px; outline: none;
+    }
+    #part-search:focus { border-color: #0f3460; }
+    #search-list {
+      position: absolute; z-index: 100; top: 100%; left: 0; right: 0;
+      background: #fff; border: 1.5px solid #c8d0e7; border-top: none;
+      border-radius: 0 0 8px 8px; max-height: 280px; overflow-y: auto;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12); display: none;
+    }
+    #search-list.open { display: block; }
+    .search-item {
+      padding: 9px 14px; font-size: 0.88rem; cursor: pointer;
+      border-bottom: 1px solid #f0f2f5; display: flex;
+      justify-content: space-between; align-items: center;
+    }
+    .search-item:last-child { border-bottom: none; }
+    .search-item:hover, .search-item.active { background: #f0f4ff; }
+    .search-item .rank { color: #aaa; font-size: 0.78rem; }
+    .search-hint { padding: 8px 14px; color: #aaa; font-size: 0.8rem; }
+
+    /* stats */
+    .stats-wrap { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; padding-bottom: 2px; }
+    .stat-pill {
+      background: #f0f4ff; border-radius: 8px; padding: 8px 14px;
+      font-size: 0.82rem; color: #333; white-space: nowrap;
+    }
+    .stat-pill strong { color: #0f3460; }
+
+    /* ── Detail Card ─────────────────────────── */
+    #detail-card {
+      display: none; background: #fff; border-radius: 12px;
+      padding: 20px 24px; margin-bottom: 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    }
+    #detail-card h3 { font-size: 1.1rem; font-weight: 700; color: #0f3460; margin-bottom: 14px; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; }
+    .metric-box {
+      background: #f8faff; border: 1px solid #dde4f5; border-radius: 10px; padding: 14px 16px;
+    }
+    .metric-box .mlabel { font-size: 0.72rem; color: #666; text-transform: uppercase; letter-spacing: .5px; }
+    .metric-box .mvalue { font-size: 1.4rem; font-weight: 700; color: #0f3460; margin-top: 4px; }
+
+    /* ── Chart Card ──────────────────────────── */
+    #chart-card {
+      display: none; background: #fff; border-radius: 12px;
+      padding: 24px; margin-bottom: 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    }
+    #chart-card h3 { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: 4px; }
+    #chart-card .subtitle { font-size: 0.82rem; color: #777; margin-bottom: 18px; }
+    #main-chart { max-height: 420px; }
+
+    /* ── Data Table ──────────────────────────── */
+    #table-card {
+      display: none; background: #fff; border-radius: 12px;
+      padding: 20px 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    }
+    #table-card h3 { font-size: 0.95rem; font-weight: 700; color: #333; margin-bottom: 14px; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.82rem; }
+    th {
+      background: #f0f4ff; color: #0f3460; font-weight: 700;
+      padding: 8px 12px; text-align: right; white-space: nowrap;
+      border-bottom: 2px solid #c8d0e7; position: sticky; top: 0;
+    }
+    th:first-child { text-align: left; }
+    td { padding: 7px 12px; border-bottom: 1px solid #f0f2f5; text-align: right; }
+    td:first-child { text-align: left; font-family: monospace; }
+    tr:hover td { background: #f8faff; }
+
+    /* ── Re-upload ───────────────────────────── */
     #reupload-btn {
-      display: none;
-      margin-top: 20px;
-      padding: 8px 18px;
-      background: #f0f2f5;
-      border: 1.5px solid #c8d0e7;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      color: #333;
+      display: none; margin-bottom: 16px; padding: 7px 16px;
+      background: #f0f2f5; border: 1.5px solid #c8d0e7; border-radius: 8px;
+      font-size: 0.83rem; cursor: pointer; color: #333;
     }
     #reupload-btn:hover { background: #e2e6ef; }
+
+    /* ── Empty state ─────────────────────────── */
+    #empty-state {
+      display: none; text-align: center; padding: 60px 20px; color: #aaa;
+    }
+    #empty-state svg { margin-bottom: 12px; }
+    #empty-state p { font-size: 0.95rem; }
   </style>
 </head>
 <body>
@@ -198,7 +183,7 @@
 </header>
 
 <main>
-  <!-- Upload Zone -->
+  <!-- Upload -->
   <div id="upload-section">
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -206,56 +191,74 @@
       <line x1="12" y1="3" x2="12" y2="15"/>
     </svg>
     <h2>Drop your Excel file here</h2>
-    <p>Supports .xlsx and .xls — reads <strong>Ceres_Y_plus_13_digit_allocation</strong> sheet automatically</p>
-    <button class="btn" onclick="document.getElementById('file-input').click()">Browse file</button>
+    <p>Supports .xlsx / .xls — reads <strong>Ceres_Y_plus_13_digit_allocation</strong> automatically</p>
+    <button class="upload-btn" onclick="document.getElementById('file-input').click()">Browse file</button>
     <input type="file" id="file-input" accept=".xlsx,.xls" />
   </div>
 
   <div id="error-banner"></div>
-  <div id="loader"><div class="spinner"></div>Reading file…</div>
+  <div id="loader"><div class="spinner"></div>Reading file — please wait…</div>
 
-  <!-- Main App (shown after successful parse) -->
   <div id="app">
-    <div id="top-bar">
-      <label for="part-select">13-Digit Number:</label>
-      <select id="part-select">
-        <option value="">— Select a part number —</option>
-      </select>
-      <div class="stat-pill">Total parts: <strong id="stat-total">0</strong></div>
-      <div class="stat-pill">Max Bosch Qty: <strong id="stat-max">—</strong></div>
-      <div class="stat-pill">Avg Bosch Qty: <strong id="stat-avg">—</strong></div>
-    </div>
-
     <button id="reupload-btn" onclick="resetApp()">↩ Upload a different file</button>
 
-    <!-- Selected part details -->
-    <div id="detail-card">
-      <h3 id="detail-title">Part Number —</h3>
-      <div class="metrics-grid">
-        <div class="metric-box"><div class="label">Bosch Qty 2026.03</div><div class="value" id="d-bosch">—</div></div>
-        <div class="metric-box"><div class="label">Ceres G 2026.03</div><div class="value" id="d-ceres">—</div></div>
-        <div class="metric-box"><div class="label">CRD</div><div class="value" id="d-crd">—</div></div>
-        <div class="metric-box"><div class="label">CDD</div><div class="value" id="d-cdd">—</div></div>
+    <!-- Control Bar -->
+    <div id="control-bar">
+      <div class="search-wrap">
+        <span class="control-label">Search 13-Digit Number (sorted by Bosch Qty, highest first)</span>
+        <input type="text" id="part-search" placeholder="Type to search or scroll the list…" autocomplete="off" />
+        <div id="search-list"></div>
+      </div>
+      <div class="stats-wrap">
+        <span class="control-label" style="width:100%">Dataset</span>
+        <div class="stat-pill">Unique parts: <strong id="stat-total">0</strong></div>
+        <div class="stat-pill">Periods: <strong id="stat-periods">0</strong></div>
+        <div class="stat-pill">Max Bosch Qty: <strong id="stat-max">—</strong></div>
       </div>
     </div>
 
-    <!-- 4 Charts -->
-    <div id="charts-grid">
-      <div class="chart-card">
-        <h3>Bosch Quality 2026.03 — All Parts (sorted)</h3>
-        <canvas id="chart-bosch"></canvas>
+    <!-- No-selection placeholder -->
+    <div id="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      <p>Select a part number above to see its allocation chart</p>
+    </div>
+
+    <!-- Detail numbers -->
+    <div id="detail-card">
+      <h3 id="detail-title"></h3>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="mlabel">Bosch Qty 2026.03</div><div class="mvalue" id="d-bosch">—</div></div>
+        <div class="metric-box"><div class="mlabel">Ceres G 2026.03</div><div class="mvalue" id="d-ceres">—</div></div>
+        <div class="metric-box"><div class="mlabel">CRD</div><div class="mvalue" id="d-crd">—</div></div>
+        <div class="metric-box"><div class="mlabel">CDD</div><div class="mvalue" id="d-cdd">—</div></div>
       </div>
-      <div class="chart-card">
-        <h3>Ceres G 2026.03 — All Parts</h3>
-        <canvas id="chart-ceres"></canvas>
-      </div>
-      <div class="chart-card">
-        <h3>CRD — All Parts</h3>
-        <canvas id="chart-crd"></canvas>
-      </div>
-      <div class="chart-card">
-        <h3>CDD — All Parts</h3>
-        <canvas id="chart-cdd"></canvas>
+    </div>
+
+    <!-- Line Chart -->
+    <div id="chart-card">
+      <h3 id="chart-title"></h3>
+      <div class="subtitle">Allocation quantities by period (YYYYMM)</div>
+      <canvas id="main-chart"></canvas>
+    </div>
+
+    <!-- Data Table -->
+    <div id="table-card">
+      <h3>Period Data</h3>
+      <div class="table-wrap">
+        <table id="data-table">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Ceres G</th>
+              <th>CRD</th>
+              <th>CDD</th>
+              <th>Bosch Qty</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -265,8 +268,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // State
 // ─────────────────────────────────────────────────────────────────────────────
-let allParts = [];      // sorted array of { digit13, ceresG, crd, cdd, bosch }
-let charts   = {};      // Chart.js instances keyed by metric
+let partsMap   = new Map();  // digit13 → { baseBosch, baseCeres, baseCrd, baseCdd, timeSeries[] }
+let sortedKeys = [];         // digit13 strings sorted by baseBosch desc
+let allPeriods = [];         // sorted YYYYMM strings across all metric periods found
+let kCRD = null, kCDD = null;// single-value column keys (no period suffix)
+let mainChart  = null;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DOM refs
@@ -276,30 +282,57 @@ const fileInput     = document.getElementById('file-input');
 const errorBanner   = document.getElementById('error-banner');
 const loader        = document.getElementById('loader');
 const app           = document.getElementById('app');
-const partSelect    = document.getElementById('part-select');
+const partSearch    = document.getElementById('part-search');
+const searchList    = document.getElementById('search-list');
 const reuploadBtn   = document.getElementById('reupload-btn');
 const detailCard    = document.getElementById('detail-card');
+const chartCard     = document.getElementById('chart-card');
+const tableCard     = document.getElementById('table-card');
+const emptyState    = document.getElementById('empty-state');
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Drag-and-drop on the upload zone
+// Drag / drop + file input
 // ─────────────────────────────────────────────────────────────────────────────
 uploadSection.addEventListener('dragover', e => { e.preventDefault(); uploadSection.classList.add('drag-over'); });
-uploadSection.addEventListener('dragleave', ()  => uploadSection.classList.remove('drag-over'));
+uploadSection.addEventListener('dragleave', () => uploadSection.classList.remove('drag-over'));
 uploadSection.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadSection.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file) processFile(file);
+  e.preventDefault(); uploadSection.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
 });
 fileInput.addEventListener('change', e => { if (e.target.files[0]) processFile(e.target.files[0]); });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Flexible column-header matching
+// Flexible column name helpers
 // ─────────────────────────────────────────────────────────────────────────────
+function norm(s) { return String(s).toLowerCase().replace(/[\s_\-\.]/g, ''); }
+
 function findKey(keys, ...tokens) {
-  return keys.find(k =>
-    tokens.every(t => k.toString().toLowerCase().replace(/[\s_\-\.]/g, '').includes(t.toLowerCase().replace(/[\s_\-\.]/g, '')))
-  ) || null;
+  return keys.find(k => tokens.every(t => norm(k).includes(norm(t)))) || null;
+}
+
+// Extract YYYYMM from a column name.
+// Handles: "Ceres_G_2026.03" → "202603"
+//          "Bosch_quality_202604" → "202604"
+//          "CRD_202603" → "202603"
+function extractPeriod(colName) {
+  const s = String(colName);
+  // Match YYYY.MM where YYYY starts with 20
+  const m1 = s.match(/(20\d{2})\.(\d{2})/);
+  if (m1) return m1[1] + m1[2];
+  // Match 6-digit YYYYMM
+  const m2 = s.match(/(20\d{4})/);
+  if (m2) return m2[1];
+  return null;
+}
+
+// Which metric does this column belong to?
+function extractMetric(colName) {
+  const n = norm(colName);
+  if (n.includes('ceres') && n.includes('g')) return 'ceresG';
+  if (n.includes('bosch')) return 'bosch';
+  if (n.includes('crd')) return 'crd';
+  if (n.includes('cdd')) return 'cdd';
+  return null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -315,58 +348,166 @@ function processFile(file) {
     try {
       const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
 
-      // Find the target sheet (case-insensitive, partial match)
-      const TARGET = 'ceres_y_plus_13_digit_allocation';
-      const sheetName = wb.SheetNames.find(n => n.toLowerCase().replace(/[\s]/g,'_') === TARGET)
-                     || wb.SheetNames.find(n => n.toLowerCase().includes('13_digit') || n.toLowerCase().includes('13-digit') || n.toLowerCase().includes('ceres_y'))
-                     || wb.SheetNames.find(n => n.toLowerCase().includes('allocation'));
+      // Find the target sheet (flexible match)
+      const sheetName =
+        wb.SheetNames.find(n => norm(n) === norm('Ceres_Y_plus_13_digit_allocation')) ||
+        wb.SheetNames.find(n => norm(n).includes('13digit') || norm(n).includes('13_digit')) ||
+        wb.SheetNames.find(n => norm(n).includes('allocation'));
 
       if (!sheetName) {
         throw new Error(
-          `Could not find sheet "Ceres_Y_plus_13_digit_allocation".\n` +
-          `Sheets found: ${wb.SheetNames.join(', ')}`
+          'Could not find sheet "Ceres_Y_plus_13_digit_allocation".\n' +
+          'Sheets in this file: ' + wb.SheetNames.join(', ')
         );
       }
 
       const ws   = wb.Sheets[sheetName];
-      const rows = XLSX.utils.sheet_to_json(ws, { defval: null });
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: null, raw: true });
+      if (!rows.length) throw new Error('The sheet appears to be empty.');
 
-      if (rows.length === 0) throw new Error('The sheet appears to be empty.');
+      const allKeys = Object.keys(rows[0]);
 
-      const keys = Object.keys(rows[0]);
+      // ── Find base columns ──────────────────────────────────────────────
+      const k13 = findKey(allKeys, '13digit') ||
+                  findKey(allKeys, '13', 'digit') ||
+                  findKey(allKeys, '13');
+      if (!k13) throw new Error('Cannot find the 13-digit column (expected in column G).\nHeaders: ' + allKeys.join(', '));
 
-      // Locate each required column by its header text
-      const k13     = findKey(keys, '13digit')   || findKey(keys, '13', 'digit') || findKey(keys, '13');
-      const kCeres  = findKey(keys, 'ceres', 'g');
-      const kCRD    = findKey(keys, 'crd');
-      const kCDD    = findKey(keys, 'cdd');
-      const kBosch  = findKey(keys, 'bosch');
+      // ── Categorise all columns by metric + period ──────────────────────
+      // periodColMap: { '202603': { ceresG: colKey, bosch: colKey, crd: colKey, cdd: colKey }, ... }
+      const periodColMap = {};
+      const noPeriodCols = { crd: null, cdd: null, ceresG: null, bosch: null };
 
-      const missing = [
-        !k13    && '13-digit (col G)',
-        !kCeres && 'Ceres_G_2026.03 (col I)',
-        !kCRD   && 'CRD (col J)',
-        !kCDD   && 'CDD (col K)',
-        !kBosch && 'Bosch_quality_2026.03 (col L)',
-      ].filter(Boolean);
+      for (const key of allKeys) {
+        if (key === k13) continue;
+        const metric = extractMetric(key);
+        if (!metric) continue;
+        const period = extractPeriod(key);
+        if (period) {
+          if (!periodColMap[period]) periodColMap[period] = {};
+          if (!periodColMap[period][metric]) periodColMap[period][metric] = key; // keep first match
+        } else {
+          if (!noPeriodCols[metric]) noPeriodCols[metric] = key;
+        }
+      }
 
-      if (missing.length) throw new Error(`Missing columns: ${missing.join(', ')}\nFound headers: ${keys.join(', ')}`);
+      allPeriods = Object.keys(periodColMap).sort();
 
-      // Build cleaned dataset — skip rows without a 13-digit key
-      const raw = rows
-        .filter(r => r[k13] != null && String(r[k13]).trim() !== '')
-        .map(r => ({
-          digit13 : String(r[k13]).trim(),
-          ceresG  : toNum(r[kCeres]),
-          crd     : toNum(r[kCRD]),
-          cdd     : toNum(r[kCDD]),
-          bosch   : toNum(r[kBosch]),
-        }));
+      // Fallback: if no period columns found at all, treat the 4 base cols as a single snapshot
+      if (allPeriods.length === 0) {
+        const kCeres = findKey(allKeys, 'ceres', 'g');
+        const kBosch = findKey(allKeys, 'bosch');
+        kCRD = findKey(allKeys, 'crd');
+        kCDD = findKey(allKeys, 'cdd');
+        if (!kCeres || !kBosch) throw new Error('Cannot identify required columns. Headers: ' + allKeys.join(', '));
+        // Treat as single period "snapshot"
+        const fakePeriod = '202603';
+        periodColMap[fakePeriod] = { ceresG: kCeres, bosch: kBosch };
+        if (kCRD) periodColMap[fakePeriod].crd = kCRD;
+        if (kCDD) periodColMap[fakePeriod].cdd = kCDD;
+        allPeriods = [fakePeriod];
+      } else {
+        // Keep single-value CRD/CDD for the summary card
+        kCRD = noPeriodCols.crd;
+        kCDD = noPeriodCols.cdd;
+      }
 
-      if (raw.length === 0) throw new Error('No valid rows found in the sheet.');
+      // ── Detect long vs wide format ─────────────────────────────────────
+      // Long format: multiple rows share the same 13-digit value + a period column
+      // Wide format: each row is a unique part, many period-named metric columns
+      //
+      // Heuristic: check if any column's VALUES look like YYYYMM
+      let periodValueKey = null;
+      for (const key of allKeys) {
+        if (key === k13) continue;
+        const sample = rows.find(r => r[key] != null);
+        if (sample && /^20\d{4}$/.test(String(sample[key]).trim())) {
+          periodValueKey = key;
+          break;
+        }
+      }
 
-      // Sort by Bosch quality descending (highest first)
-      allParts = raw.sort((a, b) => b.bosch - a.bosch);
+      partsMap.clear();
+
+      if (periodValueKey && allPeriods.length <= 2) {
+        // ── LONG FORMAT ────────────────────────────────────────────────────
+        // Each row has: k13 (part), periodValueKey (YYYYMM), + metric value columns
+        // Find the metric value columns for long format
+        const lkCeres = noPeriodCols.ceresG || findKey(allKeys, 'ceres');
+        const lkBosch = noPeriodCols.bosch  || findKey(allKeys, 'bosch');
+        const lkCrd   = noPeriodCols.crd    || findKey(allKeys, 'crd');
+        const lkCdd   = noPeriodCols.cdd    || findKey(allKeys, 'cdd');
+
+        const tmpMap = new Map(); // digit13 → Map<period, {ceresG,bosch,crd,cdd}>
+        for (const row of rows) {
+          const d13    = row[k13] != null ? String(row[k13]).trim() : null;
+          const period = row[periodValueKey] != null ? String(row[periodValueKey]).trim() : null;
+          if (!d13 || !period) continue;
+          if (!tmpMap.has(d13)) tmpMap.set(d13, new Map());
+          tmpMap.get(d13).set(period, {
+            ceresG : toNum(lkCeres ? row[lkCeres] : null),
+            bosch  : toNum(lkBosch ? row[lkBosch] : null),
+            crd    : toNum(lkCrd   ? row[lkCrd]   : null),
+            cdd    : toNum(lkCdd   ? row[lkCdd]   : null),
+          });
+        }
+
+        // Collect all periods seen
+        const periodSet = new Set();
+        for (const [, pMap] of tmpMap) for (const p of pMap.keys()) periodSet.add(p);
+        allPeriods = [...periodSet].sort();
+
+        for (const [d13, pMap] of tmpMap) {
+          const ts = allPeriods.map(p => ({ period: p, ...(pMap.get(p) || { ceresG:0, bosch:0, crd:0, cdd:0 }) }));
+          const firstPeriod = pMap.get(allPeriods[0]) || {};
+          partsMap.set(d13, {
+            baseBosch : firstPeriod.bosch  || 0,
+            baseCeres : firstPeriod.ceresG || 0,
+            baseCrd   : firstPeriod.crd    || 0,
+            baseCdd   : firstPeriod.cdd    || 0,
+            timeSeries: ts,
+          });
+        }
+
+      } else {
+        // ── WIDE FORMAT ────────────────────────────────────────────────────
+        // Each row = one unique part. Period data comes from period-named columns.
+        const seenParts = new Set();
+        for (const row of rows) {
+          const d13 = row[k13] != null ? String(row[k13]).trim() : null;
+          if (!d13) continue;
+          if (seenParts.has(d13)) continue; // deduplicate
+          seenParts.add(d13);
+
+          const ts = allPeriods.map(p => {
+            const pcols = periodColMap[p] || {};
+            return {
+              period : p,
+              ceresG : toNum(pcols.ceresG ? row[pcols.ceresG] : null),
+              bosch  : toNum(pcols.bosch  ? row[pcols.bosch]  : null),
+              crd    : toNum(pcols.crd    ? row[pcols.crd]    : (kCRD ? row[kCRD] : null)),
+              cdd    : toNum(pcols.cdd    ? row[pcols.cdd]    : (kCDD ? row[kCDD] : null)),
+            };
+          });
+
+          // Base values = first available period (for sorting + summary card)
+          const firstTs = ts[0] || {};
+          const baseBosch = Math.max(...ts.map(t => t.bosch));  // use max for sorting
+
+          partsMap.set(d13, {
+            baseBosch : baseBosch,
+            baseCeres : firstTs.ceresG || 0,
+            baseCrd   : kCRD ? toNum(row[kCRD]) : (firstTs.crd || 0),
+            baseCdd   : kCDD ? toNum(row[kCDD]) : (firstTs.cdd || 0),
+            timeSeries: ts,
+          });
+        }
+      }
+
+      if (partsMap.size === 0) throw new Error('No valid rows found in the sheet.');
+
+      // Sort parts by baseBosch descending
+      sortedKeys = [...partsMap.keys()].sort((a, b) => partsMap.get(b).baseBosch - partsMap.get(a).baseBosch);
 
       loader.style.display = 'none';
       buildUI();
@@ -374,6 +515,7 @@ function processFile(file) {
       loader.style.display = 'none';
       uploadSection.style.display = 'block';
       showError('⚠ ' + err.message);
+      console.error(err);
     }
   };
   reader.readAsArrayBuffer(file);
@@ -386,125 +528,206 @@ function toNum(v) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Build the UI after successful parse
+// Build UI
 // ─────────────────────────────────────────────────────────────────────────────
 function buildUI() {
-  // Stats
-  const boschVals = allParts.map(p => p.bosch);
-  document.getElementById('stat-total').textContent = allParts.length;
-  document.getElementById('stat-max').textContent   = fmt(Math.max(...boschVals));
-  document.getElementById('stat-avg').textContent   = fmt(boschVals.reduce((a,b)=>a+b,0) / boschVals.length);
+  document.getElementById('stat-total').textContent   = partsMap.size.toLocaleString();
+  document.getElementById('stat-periods').textContent = allPeriods.length;
+  document.getElementById('stat-max').textContent     = fmt(sortedKeys.length ? partsMap.get(sortedKeys[0]).baseBosch : 0);
 
-  // Populate dropdown (sorted by bosch desc — already sorted)
-  partSelect.innerHTML = '<option value="">— Select a part number —</option>';
-  allParts.forEach((p, i) => {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = p.digit13;
-    partSelect.appendChild(opt);
-  });
-
-  // Draw all 4 charts with "no selection" state
-  buildCharts(-1);
-
-  app.style.display   = 'block';
+  app.style.display         = 'block';
   reuploadBtn.style.display = 'block';
-  partSelect.addEventListener('change', onSelect);
+  emptyState.style.display  = 'block';
+
+  setupSearchableDropdown();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Dropdown change handler
+// Searchable dropdown
 // ─────────────────────────────────────────────────────────────────────────────
-function onSelect() {
-  const idx = partSelect.value === '' ? -1 : parseInt(partSelect.value, 10);
+const MAX_LIST = 200;
 
-  if (idx === -1) {
-    detailCard.style.display = 'none';
-    buildCharts(-1);
-    return;
+function setupSearchableDropdown() {
+  partSearch.value = '';
+  renderList('');
+
+  partSearch.addEventListener('input', () => renderList(partSearch.value.trim()));
+  partSearch.addEventListener('focus', () => {
+    searchList.classList.add('open');
+    renderList(partSearch.value.trim());
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.search-wrap')) searchList.classList.remove('open');
+  });
+  partSearch.addEventListener('keydown', e => {
+    const items = [...searchList.querySelectorAll('.search-item')];
+    const active = searchList.querySelector('.search-item.active');
+    let idx = active ? items.indexOf(active) : -1;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(items, Math.min(idx + 1, items.length - 1)); }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); setActive(items, Math.max(idx - 1, 0)); }
+    if (e.key === 'Enter' && active) { e.preventDefault(); active.click(); }
+    if (e.key === 'Escape') searchList.classList.remove('open');
+  });
+}
+
+function setActive(items, idx) {
+  items.forEach(i => i.classList.remove('active'));
+  if (items[idx]) { items[idx].classList.add('active'); items[idx].scrollIntoView({ block: 'nearest' }); }
+}
+
+function renderList(query) {
+  const q = query.toLowerCase();
+  const matches = q
+    ? sortedKeys.filter(k => k.toLowerCase().includes(q)).slice(0, MAX_LIST)
+    : sortedKeys.slice(0, MAX_LIST);
+
+  if (!matches.length) {
+    searchList.innerHTML = '<div class="search-hint">No results found</div>';
+  } else {
+    searchList.innerHTML = matches.map((key, i) => {
+      const rank = sortedKeys.indexOf(key) + 1;
+      return `<div class="search-item" data-key="${escHtml(key)}">
+        <span>${escHtml(key)}</span>
+        <span class="rank">#${rank} — Bosch: ${fmt(partsMap.get(key).baseBosch)}</span>
+      </div>`;
+    }).join('') + (
+      matches.length === MAX_LIST && sortedKeys.length > MAX_LIST
+        ? `<div class="search-hint">Showing first ${MAX_LIST} of ${sortedKeys.length.toLocaleString()} — type to narrow down</div>`
+        : ''
+    );
+
+    searchList.querySelectorAll('.search-item').forEach(el => {
+      el.addEventListener('click', () => {
+        selectPart(el.dataset.key);
+        partSearch.value = el.dataset.key;
+        searchList.classList.remove('open');
+      });
+    });
   }
 
-  const p = allParts[idx];
+  searchList.classList.add('open');
+}
 
-  // Fill detail card
-  document.getElementById('detail-title').textContent = 'Part: ' + p.digit13;
-  document.getElementById('d-bosch').textContent = fmt(p.bosch);
-  document.getElementById('d-ceres').textContent = fmt(p.ceresG);
-  document.getElementById('d-crd').textContent   = fmt(p.crd);
-  document.getElementById('d-cdd').textContent   = fmt(p.cdd);
+// ─────────────────────────────────────────────────────────────────────────────
+// Select a part and render chart
+// ─────────────────────────────────────────────────────────────────────────────
+function selectPart(key) {
+  const part = partsMap.get(key);
+  if (!part) return;
+
+  emptyState.style.display = 'none';
+
+  // Detail card
+  document.getElementById('detail-title').textContent = key;
+  document.getElementById('d-bosch').textContent = fmt(part.baseBosch);
+  document.getElementById('d-ceres').textContent = fmt(part.baseCeres);
+  document.getElementById('d-crd').textContent   = fmt(part.baseCrd);
+  document.getElementById('d-cdd').textContent   = fmt(part.baseCdd);
   detailCard.style.display = 'block';
 
-  buildCharts(idx);
+  // Chart
+  document.getElementById('chart-title').textContent = key;
+  renderLineChart(part.timeSeries);
+  chartCard.style.display = 'block';
+
+  // Table
+  renderTable(part.timeSeries);
+  tableCard.style.display = 'block';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Build / rebuild the 4 charts
+// Line chart
 // ─────────────────────────────────────────────────────────────────────────────
-const COLORS = {
-  bosch : { base: 'rgba(15,52,96,0.65)',   hi: 'rgba(230,57,70,1)',   border: '#0f3460', hiBorder: '#e63946' },
-  ceres : { base: 'rgba(22,163,74,0.60)',  hi: 'rgba(230,57,70,1)',   border: '#16a34a', hiBorder: '#e63946' },
-  crd   : { base: 'rgba(59,130,246,0.60)', hi: 'rgba(230,57,70,1)',   border: '#3b82f6', hiBorder: '#e63946' },
-  cdd   : { base: 'rgba(234,179,8,0.65)',  hi: 'rgba(230,57,70,1)',   border: '#ca8a04', hiBorder: '#e63946' },
-};
+function renderLineChart(ts) {
+  if (mainChart) { mainChart.destroy(); mainChart = null; }
 
-function buildCharts(selectedIdx) {
-  const labels = allParts.map(p => p.digit13);
+  const labels  = ts.map(t => t.period);
+  const ceresG  = ts.map(t => t.ceresG  || null);
+  const bosch   = ts.map(t => t.bosch   || null);
+  const crd     = ts.map(t => t.crd     || null);
+  const cdd     = ts.map(t => t.cdd     || null);
 
-  renderChart('chart-bosch', labels, allParts.map(p => p.bosch),  selectedIdx, COLORS.bosch);
-  renderChart('chart-ceres', labels, allParts.map(p => p.ceresG), selectedIdx, COLORS.ceres);
-  renderChart('chart-crd',   labels, allParts.map(p => p.crd),    selectedIdx, COLORS.crd);
-  renderChart('chart-cdd',   labels, allParts.map(p => p.cdd),    selectedIdx, COLORS.cdd);
-}
-
-function renderChart(canvasId, labels, data, selectedIdx, color) {
-  // Destroy old instance if exists
-  if (charts[canvasId]) { charts[canvasId].destroy(); }
-
-  const bgColors     = data.map((_, i) => i === selectedIdx ? color.hi   : color.base);
-  const borderColors = data.map((_, i) => i === selectedIdx ? color.hiBorder : color.border);
-
-  const ctx = document.getElementById(canvasId).getContext('2d');
-  charts[canvasId] = new Chart(ctx, {
-    type: 'bar',
+  const ctx = document.getElementById('main-chart').getContext('2d');
+  mainChart = new Chart(ctx, {
+    type: 'line',
     data: {
       labels,
-      datasets: [{
-        label         : '',
-        data,
-        backgroundColor : bgColors,
-        borderColor     : borderColors,
-        borderWidth     : data.map((_, i) => i === selectedIdx ? 2 : 1),
-      }]
+      datasets: [
+        {
+          label          : 'CERES_G',
+          data           : ceresG,
+          borderColor    : '#e85d04',
+          backgroundColor: 'rgba(232,93,4,0.08)',
+          borderWidth    : 2.5,
+          pointRadius    : 3,
+          tension        : 0.3,
+          fill           : false,
+          spanGaps       : true,
+        },
+        {
+          label          : 'BOSCH_QTY',
+          data           : bosch,
+          borderColor    : '#0096c7',
+          backgroundColor: 'rgba(0,150,199,0.08)',
+          borderWidth    : 2.5,
+          pointRadius    : 3,
+          tension        : 0.3,
+          fill           : false,
+          spanGaps       : true,
+        },
+        {
+          label          : 'CRD',
+          data           : crd,
+          borderColor    : '#2dc653',
+          backgroundColor: 'rgba(45,198,83,0.08)',
+          borderWidth    : 2,
+          pointRadius    : 2,
+          tension        : 0.3,
+          fill           : false,
+          spanGaps       : true,
+          borderDash     : [5, 3],
+        },
+        {
+          label          : 'CDD',
+          data           : cdd,
+          borderColor    : '#9b5de5',
+          backgroundColor: 'rgba(155,93,229,0.08)',
+          borderWidth    : 2,
+          pointRadius    : 2,
+          tension        : 0.3,
+          fill           : false,
+          spanGaps       : true,
+          borderDash     : [5, 3],
+        },
+      ]
     },
     options: {
-      indexAxis : 'y',      // horizontal bars — easier to read long part numbers
-      responsive: true,
-      animation : false,
+      responsive : true,
+      interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend  : { display: false },
-        tooltip : {
+        legend: {
+          position: 'bottom',
+          labels  : { boxWidth: 14, font: { size: 12 } }
+        },
+        tooltip: {
           callbacks: {
-            label: ctx => ' ' + fmt(ctx.parsed.x),
-            title: ctx => ctx[0].label,
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? fmt(ctx.parsed.y) : '—'}`
           }
         }
       },
       scales: {
         x: {
-          beginAtZero: true,
-          grid: { color: '#f0f2f5' },
-          ticks: { font: { size: 11 } }
+          grid : { color: '#f0f2f5' },
+          ticks: { font: { size: 11 }, maxRotation: 45 },
+          title: { display: true, text: 'YYYYMM', font: { size: 11 } }
         },
         y: {
+          beginAtZero: true,
+          grid : { color: '#f0f2f5' },
           ticks: {
-            font: { size: 10 },
-            // Shorten labels > 20 chars so they don't overflow
-            callback: (val, i) => {
-              const lbl = labels[i];
-              return lbl.length > 18 ? lbl.slice(0, 16) + '…' : lbl;
-            }
-          },
-          grid: { display: false }
+            font    : { size: 11 },
+            callback: v => fmtShort(v),
+          }
         }
       }
     }
@@ -512,27 +735,63 @@ function renderChart(canvasId, labels, data, selectedIdx, color) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Helpers
+// Data table
 // ─────────────────────────────────────────────────────────────────────────────
-function fmt(n) {
-  if (n == null || isNaN(n)) return '—';
-  return Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+function renderTable(ts) {
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = ts.map(t =>
+    `<tr>
+      <td>${t.period}</td>
+      <td>${fmt(t.ceresG)}</td>
+      <td>${fmt(t.crd)}</td>
+      <td>${fmt(t.cdd)}</td>
+      <td>${fmt(t.bosch)}</td>
+    </tr>`
+  ).join('');
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Formatters
+// ─────────────────────────────────────────────────────────────────────────────
+function fmt(n) {
+  if (n == null || (typeof n === 'number' && isNaN(n))) return '—';
+  if (n === 0) return '0';
+  return Number(n).toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function fmtShort(n) {
+  if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(0) + 'K';
+  return n;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Error + Reset
+// ─────────────────────────────────────────────────────────────────────────────
 function showError(msg) {
-  errorBanner.textContent = msg;
+  errorBanner.textContent  = msg;
   errorBanner.style.display = msg ? 'block' : 'none';
 }
 
 function resetApp() {
-  allParts = [];
-  Object.values(charts).forEach(c => c.destroy());
-  charts = {};
-  app.style.display   = 'none';
+  partsMap.clear();
+  sortedKeys = [];
+  allPeriods = [];
+  if (mainChart) { mainChart.destroy(); mainChart = null; }
+
+  app.style.display         = 'none';
   reuploadBtn.style.display = 'none';
   detailCard.style.display  = 'none';
+  chartCard.style.display   = 'none';
+  tableCard.style.display   = 'none';
+  emptyState.style.display  = 'none';
   uploadSection.style.display = 'block';
   fileInput.value = '';
+  partSearch.value = '';
   showError('');
 }
 </script>
