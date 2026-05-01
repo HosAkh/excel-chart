@@ -366,9 +366,9 @@ function processFile(file) {
       ];
 
       function sheetHasRequiredCols(ws) {
-        const peek = XLSX.utils.sheet_to_json(ws, { defval: null, raw: true, range: 1 }); // just header row
-        if (!peek.length) return false;
-        const headers = Object.keys(peek[0]).map(h => norm(h));
+        // header:1 returns raw arrays; first element is the actual header row
+        const firstRow = (XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })[0] || []);
+        const headers = firstRow.map(h => norm(String(h)));
         return REQUIRED_SIGS.every(sigs => headers.some(h => sigs.some(s => h.includes(s))));
       }
 
