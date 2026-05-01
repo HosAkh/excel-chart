@@ -296,7 +296,7 @@ fileInput.addEventListener('change', e => { if (e.target.files[0]) processFile(e
 // ─────────────────────────────────────────────────────────────────────────────
 // Flexible column name helpers
 // ─────────────────────────────────────────────────────────────────────────────
-function norm(s) { return String(s).toLowerCase().replace(/[\s_\-\.]/g, ''); }
+function norm(s) { return String(s).trim().toLowerCase().replace(/[\s_\-\.]/g, ''); }
 
 function findKey(keys, ...tokens) {
   return keys.find(k => tokens.every(t => norm(k).includes(norm(t)))) || null;
@@ -386,8 +386,15 @@ function processFile(file) {
       }
 
       const ws   = wb.Sheets[sheetName];
-      const rows = XLSX.utils.sheet_to_json(ws, { defval: null, raw: true });
-      if (!rows.length) throw new Error('The sheet appears to be empty.');
+      const rawRows = XLSX.utils.sheet_to_json(ws, { defval: null, raw: true });
+      if (!rawRows.length) throw new Error('The sheet appears to be empty.');
+
+      // Trim all column-header keys so trailing/leading spaces never cause mismatches
+      const rows = rawRows.map(row => {
+        const clean = {};
+        for (const k of Object.keys(row)) clean[k.trim()] = row[k];
+        return clean;
+      });
 
       const allKeys = Object.keys(rows[0]);
 
