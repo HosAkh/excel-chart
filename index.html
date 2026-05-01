@@ -190,10 +190,10 @@
       <polyline points="17 8 12 3 7 8"/>
       <line x1="12" y1="3" x2="12" y2="15"/>
     </svg>
-    <h2>Drop your Excel file here</h2>
-    <p>Supports .xlsx / .xls — reads <strong>Ceres_Y_plus_13_digit_allocation</strong> automatically</p>
+    <h2>Drop your Excel or CSV file here</h2>
+    <p>Supports .xlsx / .xls / .csv — reads <strong>Ceres_Y_plus_13_digit_allocation</strong> automatically</p>
     <button class="upload-btn" onclick="document.getElementById('file-input').click()">Browse file</button>
-    <input type="file" id="file-input" accept=".xlsx,.xls" />
+    <input type="file" id="file-input" accept=".xlsx,.xls,.csv" />
   </div>
 
   <div id="error-banner"></div>
@@ -328,23 +328,32 @@ function extractMetric(colName) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Process uploaded file
+// Process uploaded file (Excel or CSV)
 // ─────────────────────────────────────────────────────────────────────────────
 function processFile(file) {
   showError('');
   loader.style.display = 'block';
   uploadSection.style.display = 'none';
 
+  const isCsv = file.name.toLowerCase().endsWith('.csv');
   const reader = new FileReader();
+
   reader.onload = e => {
     try {
-      const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      let wb;
+      if (isCsv) {
+        // Parse CSV as text; XLSX creates a single sheet named "Sheet1"
+        wb = XLSX.read(e.target.result, { type: 'string' });
+      } else {
+        wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      }
 
-      // Find the target sheet (flexible match)
-      const sheetName =
-        wb.SheetNames.find(n => norm(n) === norm('Ceres_Y_plus_13_digit_allocation')) ||
-        wb.SheetNames.find(n => norm(n).includes('13digit') || norm(n).includes('13_digit')) ||
-        wb.SheetNames.find(n => norm(n).includes('allocation'));
+      // For CSV there is only one sheet; for Excel find the target sheet
+      const sheetName = isCsv
+        ? wb.SheetNames[0]
+        : (wb.SheetNames.find(n => norm(n) === norm('Ceres_Y_plus_13_digit_allocation')) ||
+           wb.SheetNames.find(n => norm(n).includes('13digit') || norm(n).includes('13_digit')) ||
+           wb.SheetNames.find(n => norm(n).includes('allocation')));
 
       if (!sheetName) {
         throw new Error(
@@ -510,7 +519,11 @@ function processFile(file) {
       console.error(err);
     }
   };
-  reader.readAsArrayBuffer(file);
+  if (isCsv) {
+    reader.readAsText(file);
+  } else {
+    reader.readAsArrayBuffer(file);
+  }
 }
 
 function toNum(v) {
