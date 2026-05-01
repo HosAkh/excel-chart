@@ -636,7 +636,7 @@ function selectPart(key) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Line chart
+// Mixed chart: CRD + CDD as bars, Ceres G + Bosch Qty as lines
 // ─────────────────────────────────────────────────────────────────────────────
 function renderLineChart(ts) {
   if (mainChart) { mainChart.destroy(); mainChart = null; }
@@ -649,11 +649,32 @@ function renderLineChart(ts) {
 
   const ctx = document.getElementById('main-chart').getContext('2d');
   mainChart = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels,
       datasets: [
         {
+          type           : 'bar',
+          label          : 'CRD',
+          data           : crd,
+          backgroundColor: 'rgba(45,198,83,0.6)',
+          borderColor    : '#2dc653',
+          borderWidth    : 1,
+          borderRadius   : 3,
+          order          : 2,
+        },
+        {
+          type           : 'bar',
+          label          : 'CDD',
+          data           : cdd,
+          backgroundColor: 'rgba(155,93,229,0.6)',
+          borderColor    : '#9b5de5',
+          borderWidth    : 1,
+          borderRadius   : 3,
+          order          : 2,
+        },
+        {
+          type           : 'line',
           label          : 'CERES_G',
           data           : ceresG,
           borderColor    : '#e85d04',
@@ -663,8 +684,10 @@ function renderLineChart(ts) {
           tension        : 0.3,
           fill           : false,
           spanGaps       : true,
+          order          : 1,
         },
         {
+          type           : 'line',
           label          : 'BOSCH_QTY',
           data           : bosch,
           borderColor    : '#0096c7',
@@ -674,30 +697,7 @@ function renderLineChart(ts) {
           tension        : 0.3,
           fill           : false,
           spanGaps       : true,
-        },
-        {
-          label          : 'CRD',
-          data           : crd,
-          borderColor    : '#2dc653',
-          backgroundColor: 'rgba(45,198,83,0.08)',
-          borderWidth    : 2,
-          pointRadius    : 2,
-          tension        : 0.3,
-          fill           : false,
-          spanGaps       : true,
-          borderDash     : [5, 3],
-        },
-        {
-          label          : 'CDD',
-          data           : cdd,
-          borderColor    : '#9b5de5',
-          backgroundColor: 'rgba(155,93,229,0.08)',
-          borderWidth    : 2,
-          pointRadius    : 2,
-          tension        : 0.3,
-          fill           : false,
-          spanGaps       : true,
-          borderDash     : [5, 3],
+          order          : 1,
         },
       ]
     },
