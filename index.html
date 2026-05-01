@@ -248,15 +248,7 @@
       <h3>Period Data</h3>
       <div class="table-wrap">
         <table id="data-table">
-          <thead>
-            <tr>
-              <th>Period</th>
-              <th>Ceres G</th>
-              <th>CRD</th>
-              <th>CDD</th>
-              <th>Bosch Qty</th>
-            </tr>
-          </thead>
+          <thead id="table-head"></thead>
           <tbody id="table-body"></tbody>
         </table>
       </div>
@@ -735,17 +727,30 @@ function renderLineChart(ts) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Data table
+// Data table — transposed: periods as columns, metrics as rows
 // ─────────────────────────────────────────────────────────────────────────────
 function renderTable(ts) {
+  const thead = document.getElementById('table-head');
   const tbody = document.getElementById('table-body');
-  tbody.innerHTML = ts.map(t =>
+
+  // Header: blank label cell + one column per period
+  thead.innerHTML = '<tr>' +
+    '<th style="text-align:left">Metric</th>' +
+    ts.map(t => `<th>${t.period}</th>`).join('') +
+    '</tr>';
+
+  // One row per metric
+  const metrics = [
+    { label: 'Ceres G',   key: 'ceresG' },
+    { label: 'CRD',       key: 'crd'    },
+    { label: 'CDD',       key: 'cdd'    },
+    { label: 'Bosch Qty', key: 'bosch'  },
+  ];
+
+  tbody.innerHTML = metrics.map(m =>
     `<tr>
-      <td>${t.period}</td>
-      <td>${fmt(t.ceresG)}</td>
-      <td>${fmt(t.crd)}</td>
-      <td>${fmt(t.cdd)}</td>
-      <td>${fmt(t.bosch)}</td>
+      <td style="text-align:left;font-weight:600;white-space:nowrap">${m.label}</td>
+      ${ts.map(t => `<td>${fmt(t[m.key])}</td>`).join('')}
     </tr>`
   ).join('');
 }
