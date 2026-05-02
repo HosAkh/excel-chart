@@ -162,6 +162,13 @@
     td:first-child { text-align: left; font-family: monospace; }
     tr:hover td { background: #f8faff; }
 
+    .sort-select {
+      padding: 9px 12px; font-size: 0.88rem;
+      border: 1.5px solid #c8d0e7; border-radius: 8px;
+      outline: none; background: #fff; color: #333; cursor: pointer;
+    }
+    .sort-select:focus { border-color: #0f3460; }
+
     /* ── Re-upload ───────────────────────────── */
     #reupload-btn {
       display: none; margin-bottom: 16px; padding: 7px 16px;
@@ -215,15 +222,24 @@
     <!-- Control Bar -->
     <div id="control-bar">
       <div class="search-wrap">
-        <span class="control-label">Search 13-Digit Number (sorted by Bosch Qty, highest first)</span>
+        <span class="control-label" id="sort-label">Search 13-Digit Number (sorted by CRD, highest first)</span>
         <input type="text" id="part-search" placeholder="Type to search or scroll the list…" autocomplete="off" />
         <div id="search-list"></div>
+      </div>
+      <div>
+        <span class="control-label">Sort by</span>
+        <select id="sort-metric-select" class="sort-select" onchange="applySortMetric(this.value)">
+          <option value="crd">CRD</option>
+          <option value="cdd">CDD</option>
+          <option value="ceresG">Ceres G</option>
+          <option value="bosch">Bosch Qty</option>
+        </select>
       </div>
       <div class="stats-wrap">
         <span class="control-label" style="width:100%">Dataset</span>
         <div class="stat-pill">Unique parts: <strong id="stat-total">0</strong></div>
         <div class="stat-pill">Periods: <strong id="stat-periods">0</strong></div>
-        <div class="stat-pill">Max Bosch Qty: <strong id="stat-max">—</strong></div>
+        <div class="stat-pill"><span id="stat-max-label">Max CRD</span>: <strong id="stat-max">—</strong></div>
       </div>
     </div>
 
@@ -271,10 +287,18 @@
 // State
 // ─────────────────────────────────────────────────────────────────────────────
 let partsMap   = new Map();  // digit13 → { baseBosch, baseCeres, baseCrd, baseCdd, timeSeries[] }
-let sortedKeys = [];         // digit13 strings sorted by baseBosch desc
+let sortedKeys = [];         // digit13 strings sorted by current sort metric desc
 let allPeriods = [];         // sorted YYYYMM strings across all metric periods found
 let kCRD = null, kCDD = null;// single-value column keys (no period suffix)
 let mainChart  = null;
+let sortMetric = 'crd';      // current sort metric
+
+const SORT_OPTIONS = [
+  { value: 'crd',    label: 'CRD',      key: 'baseCrd'   },
+  { value: 'cdd',    label: 'CDD',      key: 'baseCdd'   },
+  { value: 'ceresG', label: 'Ceres G',  key: 'baseCeres' },
+  { value: 'bosch',  label: 'Bosch Qty',key: 'baseBosch' },
+];
 
 let partsMapB   = new Map();  // File B
 let sortedKeysB = [];
@@ -592,10 +616,24 @@ function toNum(v) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Build UI
 // ─────────────────────────────────────────────────────────────────────────────
+function applySortMetric(metric) {
+  const opt = SORT_OPTIONS.find(o => o.value === metric) || SORT_OPTIONS[0];
+  sortMetric = opt.value;
+  const mapKey = opt.key;
+  sortedKeys = [...partsMap.keys()].sort((a, b) => partsMap.get(b)[mapKey] - partsMap.get(a)[mapKey]);
+
+  const maxVal = sortedKeys.length ? partsMap.get(sortedKeys[0])[mapKey] : 0;
+  document.getElementById('stat-max').textContent    = fmt(maxVal);
+  document.getElementById('stat-max-label').textContent = `Max ${opt.label}`;
+  document.getElementById('sort-label').textContent  = `Search 13-Digit Number (sorted by ${opt.label}, highest first)`;
+  document.getElementById('sort-metric-select').value = metric;
+
+  if (searchList) renderList(partSearch ? partSearch.value.trim() : '');
+}
+
 function buildUI() {
   document.getElementById('stat-total').textContent   = partsMap.size.toLocaleString();
   document.getElementById('stat-periods').textContent = allPeriods.length;
-  document.getElementById('stat-max').textContent     = fmt(sortedKeys.length ? partsMap.get(sortedKeys[0]).baseBosch : 0);
 
   app.style.display         = 'block';
   reuploadBtn.style.display = 'block';
@@ -604,6 +642,7 @@ function buildUI() {
   document.getElementById('label-a').textContent = fileAName;
 
   setupSearchableDropdown();
+  applySortMetric(sortMetric);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -677,6 +716,9 @@ function renderList(query) {
     ? sortedKeys.filter(k => k.toLowerCase().includes(q)).slice(0, MAX_LIST)
     : sortedKeys.slice(0, MAX_LIST);
 
+  const opt = SORT_OPTIONS.find(o => o.value === sortMetric);
+  const mapKey = opt.key;
+
   if (!matches.length) {
     searchList.innerHTML = '<div class="search-hint">No results found</div>';
   } else {
@@ -684,7 +726,7 @@ function renderList(query) {
       const rank = sortedKeys.indexOf(key) + 1;
       return `<div class="search-item" data-key="${escHtml(key)}">
         <span>${escHtml(key)}</span>
-        <span class="rank">#${rank} — Bosch: ${fmt(partsMap.get(key).baseBosch)}</span>
+        <span class="rank">#${rank} — ${opt.label}: ${fmt(partsMap.get(key)[mapKey])}</span>
       </div>`;
     }).join('') + (
       matches.length === MAX_LIST && sortedKeys.length > MAX_LIST
