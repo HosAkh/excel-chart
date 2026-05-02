@@ -515,12 +515,20 @@ function processFile(file, slot = 'A') {
           const period = row[periodValueKey] != null ? String(row[periodValueKey]).trim() : null;
           if (!d13 || !period) continue;
           if (!tmpMap.has(d13)) tmpMap.set(d13, new Map());
-          tmpMap.get(d13).set(period, {
+          const pMap = tmpMap.get(d13);
+          const vals = {
             ceresG : toNum(lkCeres ? row[lkCeres] : null),
             bosch  : toNum(lkBosch ? row[lkBosch] : null),
             crd    : toNum(lkCrd   ? row[lkCrd]   : null),
             cdd    : toNum(lkCdd   ? row[lkCdd]   : null),
-          });
+          };
+          // SUM across multiple rows with the same 13-digit + period (e.g. different plant/region)
+          if (pMap.has(period)) {
+            const ex = pMap.get(period);
+            pMap.set(period, { ceresG: ex.ceresG + vals.ceresG, bosch: ex.bosch + vals.bosch, crd: ex.crd + vals.crd, cdd: ex.cdd + vals.cdd });
+          } else {
+            pMap.set(period, vals);
+          }
         }
 
         const periodSet = new Set();
@@ -541,32 +549,38 @@ function processFile(file, slot = 'A') {
 
       } else {
         // ── WIDE FORMAT ────────────────────────────────────────────────────
-        const seenParts = new Set();
+        // Accumulate into a tmpWide map first so duplicate 13-digit rows are SUMMED
+        const tmpWide = new Map();
         for (const row of rows) {
           const d13 = row[k13] != null ? String(row[k13]).trim() : null;
           if (!d13) continue;
-          if (seenParts.has(d13)) continue;
-          seenParts.add(d13);
-
-          const ts = localPeriods.map(p => {
+          if (!tmpWide.has(d13)) tmpWide.set(d13, {});
+          const acc = tmpWide.get(d13);
+          for (const p of localPeriods) {
             const pcols = periodColMap[p] || {};
-            return {
-              period : p,
+            const vals = {
               ceresG : toNum(pcols.ceresG ? row[pcols.ceresG] : null),
               bosch  : toNum(pcols.bosch  ? row[pcols.bosch]  : null),
               crd    : toNum(pcols.crd    ? row[pcols.crd]    : (kCRD ? row[kCRD] : null)),
               cdd    : toNum(pcols.cdd    ? row[pcols.cdd]    : (kCDD ? row[kCDD] : null)),
             };
-          });
-
-          const firstTs = ts[0] || {};
-          const baseBosch = Math.max(...ts.map(t => t.bosch));
-
+            if (acc[p]) {
+              acc[p].ceresG += vals.ceresG;
+              acc[p].bosch  += vals.bosch;
+              acc[p].crd    += vals.crd;
+              acc[p].cdd    += vals.cdd;
+            } else {
+              acc[p] = vals;
+            }
+          }
+        }
+        for (const [d13, acc] of tmpWide) {
+          const ts = localPeriods.map(p => ({ period: p, ...(acc[p] || { ceresG:0, bosch:0, crd:0, cdd:0 }) }));
           localMap.set(d13, {
-            baseBosch : baseBosch,
-            baseCeres : firstTs.ceresG || 0,
-            baseCrd   : kCRD ? toNum(row[kCRD]) : (firstTs.crd || 0),
-            baseCdd   : kCDD ? toNum(row[kCDD]) : (firstTs.cdd || 0),
+            baseBosch : Math.max(...ts.map(t => t.bosch)),
+            baseCeres : Math.max(...ts.map(t => t.ceresG)),
+            baseCrd   : Math.max(...ts.map(t => t.crd)),
+            baseCdd   : Math.max(...ts.map(t => t.cdd)),
             timeSeries: ts,
           });
         }
